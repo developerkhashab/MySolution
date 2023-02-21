@@ -8,28 +8,15 @@ namespace TestCache.Caching.Providers.Redis
     public class Redis : BaseCache, IBaseCache
     {
         #region Private Readonly
-        private static readonly Lazy<ConnectionMultiplexer> _lazyConnection;
+        private readonly ConnectionMultiplexer _connection;
+        private readonly IDatabase _db;
         #endregion
 
         #region Constructor
-        static Redis()
+        public Redis()
         {
-            _lazyConnection = new Lazy<ConnectionMultiplexer>(() =>
-            {
-                return ConnectionMultiplexer.Connect("localhost:6379");
-            });
-        }
-        #endregion
-
-        #region Properties
-        static ConnectionMultiplexer Connection
-        {
-            get { return _lazyConnection.Value; }
-        }
-
-        static IDatabase _db
-        {
-            get { return Connection.GetDatabase(); }
+            _connection = ConnectionMultiplexer.Connect("localhost:6379");
+            _db = _connection.GetDatabase();
         }
         #endregion
 
@@ -76,11 +63,11 @@ namespace TestCache.Caching.Providers.Redis
 
             try
             {
-                var endPoints = Connection.GetEndPoints();
+                var endPoints = _connection.GetEndPoints();
 
                 foreach (var ep in endPoints)
                 {
-                    var server = Connection.GetServer(ep);
+                    var server = _connection.GetServer(ep);
                     var keys = server.Keys(_db.Database, key);
                     var keyValues = _db.StringGet(keys.ToArray());
 
@@ -122,11 +109,17 @@ namespace TestCache.Caching.Providers.Redis
             return _db.StringSet(key, stringContent);
         }
 
+        public bool UpdateWithReadySerialization<T>(string key, RedisValue value)
+        {
+            return _db.StringSet(key, value);
+        }
+
 
         // if we want to update row in a list, we can use this function, key is the key of the list, itemtobeupdated is the model,
         // propertyToBeUpdatedBy is the unique property in the model, like productId
         public override bool UpdateItemInList<T>(string key, T itemToBeUpdated, string propertyToBeUpdatedBy)
         {
+            bool isModified = false;
             // get list from redis
             var list = GetList<T>(key);
 
@@ -153,6 +146,7 @@ namespace TestCache.Caching.Providers.Redis
                             {
                                 var newValue = property.GetValue(itemToBeUpdated, null);
                                 property.SetValue(item, newValue);
+                                isModified = true;
                             }
                             break;
                         }
@@ -161,6 +155,11 @@ namespace TestCache.Caching.Providers.Redis
                     {
                         return false;
                     }
+                }
+                if (isModified)
+                {
+                    var stringContent = SerializeContent(list);
+                    UpdateWithReadySerialization<T>(key, stringContent);
                 }
             }
             else
@@ -184,7 +183,7 @@ namespace TestCache.Caching.Providers.Redis
 
         public override void Stop()
         {
-            Connection.Dispose();
+            _connection.Dispose();
         }
         #endregion
     }

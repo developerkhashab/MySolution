@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace TestCache.Caching
 {
-    internal class CachingManager
+    public class CachingManager
     {
     }
 }
