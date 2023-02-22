@@ -2,6 +2,7 @@
 using StackExchange.Redis;
 using System.Reflection;
 using TestCache.Caching.Interfaces;
+using TestCache.Utility;
 
 namespace TestCache.Caching.Providers.Redis
 {
@@ -23,6 +24,7 @@ namespace TestCache.Caching.Providers.Redis
         #region Override Methods
         public override bool Exists(string key)
         {
+            base.Exists(key);
             return _db.KeyExists(key);
         }
 
@@ -34,6 +36,7 @@ namespace TestCache.Caching.Providers.Redis
 
         public override bool Add<T>(string key, T value)
         {
+            base.Add<T>(key, value);
             var stringContent = SerializeContent(value);
             return _db.StringSet(key, stringContent);
         }
@@ -184,6 +187,18 @@ namespace TestCache.Caching.Providers.Redis
         public override void Stop()
         {
             _connection.Dispose();
+        }
+
+        public override void ClearAllDatabases()
+        {
+            var servers = _connection.GetServers();
+            foreach (var server in servers)
+            {
+                if (server.IsConnected)
+                {
+                    server.FlushAllDatabases();
+                }
+            }
         }
         #endregion
     }

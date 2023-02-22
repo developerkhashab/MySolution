@@ -1,4 +1,5 @@
 ﻿using TestCache.Caching.Interfaces;
+using TestCache.Utility;
 
 namespace TestCache.Caching
 {
@@ -6,9 +7,25 @@ namespace TestCache.Caching
     {
         public abstract bool Add(string key, object value);
 
-        public abstract bool Add<T>(string key, T value) where T : class;
+        public virtual bool Add<T>(string key, T value) where T : class
+        {
+            string errors = string.Empty;
 
-        public abstract bool Exists(string key);
+            if (!Guard.KeyValueValid(key, value, out errors))
+            {
+                throw new ArgumentException(errors);
+            }
+            return true;
+        }
+
+        public virtual bool Exists(string key)
+        {
+            if (!key.IsNotWhiteSpaceOrEmpty())
+            {
+                throw new ArgumentException("Key must not be empty");
+            }
+            return true;
+        }
 
         public abstract T? Get<T>(string key) where T : class;
 
@@ -27,5 +44,7 @@ namespace TestCache.Caching
         public abstract bool Update<T>(string key, T value) where T : class;
 
         public abstract bool UpdateItemInList<T>(string key, T value, string propertyToBeUpdatedBy) where T : class;
+
+        public abstract void ClearAllDatabases();
     }
 }

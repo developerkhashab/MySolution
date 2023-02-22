@@ -14,5 +14,6 @@
         List<T> GetList<T>(string key) where T : class;
         string SerializeContent(object value);
         T DeserializeContent<T>(string myString);
+        void ClearAllDatabases();
     }
 }
