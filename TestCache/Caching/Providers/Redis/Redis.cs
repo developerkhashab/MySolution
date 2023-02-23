@@ -57,39 +57,33 @@ namespace TestCache.Caching.Providers.Redis
 
         public override List<T> GetList<T>(string key)
         {
+            base.GetList<T>(key);
             List<T> allValues = new();
 
-            try
+            var endPoints = _connection.GetEndPoints();
+
+            foreach (var ep in endPoints)
             {
-                var endPoints = _connection.GetEndPoints();
+                var server = _connection.GetServer(ep);
+                var keys = server.Keys(_db.Database, key);
+                var keyValues = _db.StringGet(keys.ToArray());
 
-                foreach (var ep in endPoints)
-                {
-                    var server = _connection.GetServer(ep);
-                    var keys = server.Keys(_db.Database, key);
-                    var keyValues = _db.StringGet(keys.ToArray());
+                var values = (from redisValue in keyValues
+                              where redisValue.HasValue && !redisValue.IsNullOrEmpty
+                              select DeserializeContent<T>(redisValue)).ToList();
 
-                    var values = (from redisValue in keyValues
-                                  where redisValue.HasValue && !redisValue.IsNullOrEmpty
-                                  select DeserializeContent<T>(redisValue)).ToList();
+                if (allValues == null)
+                    allValues = new List<T>();
 
-                    if (allValues == null)
-                        allValues = new List<T>();
-
-                    allValues.AddRange(values);
-                }
-
-                return allValues;
+                allValues.AddRange(values);
             }
-            catch (Exception)
-            {
-                // Log Exception
-                return allValues;
-            }
+
+            return allValues;
         }
 
         public override bool Remove(string key)
         {
+            base.Remove(key);
             return _db.KeyDelete(key);
         }
 
@@ -103,13 +97,9 @@ namespace TestCache.Caching.Providers.Redis
 
         public override bool Update<T>(string key, T value)
         {
+            base.Update<T>(key, value);
             var stringContent = SerializeContent(value);
             return _db.StringSet(key, stringContent);
-        }
-
-        public bool UpdateWithReadySerialization<T>(string key, RedisValue value)
-        {
-            return _db.StringSet(key, value);
         }
 
 
@@ -194,6 +184,14 @@ namespace TestCache.Caching.Providers.Redis
                     server.FlushAllDatabases();
                 }
             }
+        }
+        #endregion
+
+        #region Private Methods
+
+        private bool UpdateWithReadySerialization<T>(string key, RedisValue value)
+        {
+            return _db.StringSet(key, value);
         }
         #endregion
     }
