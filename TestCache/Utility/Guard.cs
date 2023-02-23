@@ -18,7 +18,7 @@ namespace TestCache.Utility
 
             if (!Key.IsNotWhiteSpaceOrEmpty())
             {
-                errorBuilder.Append("Key must not be empty.");
+                errorBuilder.Append("Key cannot be empty.");
                 valid = false;
             }
             if (!model.IsNotNull())
@@ -27,7 +27,7 @@ namespace TestCache.Utility
                 {
                     errorBuilder.Append(' ');
                 }
-                errorBuilder.Append("Value must not be null.");
+                errorBuilder.Append("Value cannot be null.");
                 valid = false;
             }
 
