@@ -30,6 +30,7 @@ namespace TestCache.Caching.Providers.Redis
 
         public override bool Add(string key, object value)
         {
+            base.Add(key, value);
             var stringContent = SerializeContent(value);
             return _db.StringSet(key, stringContent);
         }
@@ -43,21 +44,15 @@ namespace TestCache.Caching.Providers.Redis
 
         public override T? Get<T>(string key) where T : class
         {
-            try
-            {
-                RedisValue myString = _db.StringGet(key);
-                if (myString.HasValue && !myString.IsNullOrEmpty)
-                {
-                    return DeserializeContent<T>(myString);
-                }
+            base.Get<T>(key);
 
-                return null;
-            }
-            catch (Exception)
+            RedisValue myString = _db.StringGet(key);
+            if (myString.HasValue && !myString.IsNullOrEmpty)
             {
-                // Log Exception
-                return null;
+                return DeserializeContent<T>(myString);
             }
+
+            return null;
         }
 
         public override List<T> GetList<T>(string key)

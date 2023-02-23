@@ -5,7 +5,20 @@ namespace TestCache.Caching
 {
     public abstract class BaseCache : IBaseCache
     {
-        public abstract bool Add(string key, object value);
+        public virtual bool Add(string key, object value)
+        {
+            if (!key.IsNotWhiteSpaceOrEmpty())
+            {
+                throw new ArgumentException("Key must not be empty");
+            }
+            string errors = string.Empty;
+
+            if (!Guard.KeyValueValid(key, value, out errors))
+            {
+                throw new ArgumentException(errors);
+            }
+            return true;
+        }
 
         public virtual bool Add<T>(string key, T value) where T : class
         {
@@ -27,7 +40,14 @@ namespace TestCache.Caching
             return true;
         }
 
-        public abstract T? Get<T>(string key) where T : class;
+        public virtual T? Get<T>(string key) where T : class
+        {
+            if (!key.IsNotWhiteSpaceOrEmpty())
+            {
+                throw new ArgumentException("Key must not be empty");
+            }
+            return default(T?);
+        }
 
         public abstract List<T> GetList<T>(string key) where T : class;
 
