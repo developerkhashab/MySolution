@@ -2,7 +2,6 @@
 using StackExchange.Redis;
 using System.Reflection;
 using TestCache.Caching.Interfaces;
-using TestCache.Utility;
 
 namespace TestCache.Caching.Providers.Redis
 {

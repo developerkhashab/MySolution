@@ -43,6 +43,11 @@ namespace TestCache.Caching
             {
                 throw new ArgumentException("Key must not be empty");
             }
+
+            if (!Exists(key))
+            {
+                throw new ArgumentException("Key doesn't exist.");
+            }
             return default(T?);
         }
 
@@ -51,6 +56,10 @@ namespace TestCache.Caching
             if (!key.IsNotWhiteSpaceOrEmpty())
             {
                 throw new ArgumentException("Key must not be empty");
+            }
+            if (!Exists(key))
+            {
+                throw new ArgumentException("Key doesn't exist.");
             }
             return default(List<T>);
         }
@@ -61,6 +70,10 @@ namespace TestCache.Caching
             {
                 throw new ArgumentException("Key must not be empty");
             }
+            if (!Exists(key))
+            {
+                throw new ArgumentException("Key doesn't exist.");
+            }
             return true;
         }
         public virtual bool Update<T>(string key, T value) where T : class
@@ -70,6 +83,10 @@ namespace TestCache.Caching
             if (!Guard.KeyValueValid(key, value, out errors))
             {
                 throw new ArgumentException(errors);
+            }
+            if (!Exists(key))
+            {
+                throw new ArgumentException("Key doesn't exist.");
             }
             return true;
         }
